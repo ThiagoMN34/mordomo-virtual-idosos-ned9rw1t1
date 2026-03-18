@@ -2,7 +2,6 @@ import { Clock } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import useAppStore from '@/stores/main'
 import { formatTime } from '@/lib/utils'
-import { Card } from '@/components/ui/card'
 
 export function TimeSimulator() {
   const { timeMinutes, setTimeMinutes } = useAppStore()
@@ -13,7 +12,7 @@ export function TimeSimulator() {
         <div className="flex items-center justify-between text-sm font-medium">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
-            <span>Time Simulator</span>
+            <span>Simulador de Horário</span>
           </div>
           <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-base shadow-sm font-bold tracking-wider">
             {formatTime(timeMinutes)}

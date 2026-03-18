@@ -51,17 +51,17 @@ export function TaskCard({ task, onComplete, showStaff = false }: TaskCardProps)
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground pt-1">
               <span className="flex items-center gap-1">
-                <UserIcon className="w-3.5 h-3.5" /> Guest: {task.guestName}
+                <UserIcon className="w-3.5 h-3.5" /> Hóspede: {task.guestName}
               </span>
               {showStaff && (
                 <span className="flex items-center gap-1 text-primary/80 font-medium">
-                  Assigned: {task.staffName}
+                  Responsável: {task.staffName}
                 </span>
               )}
             </div>
             {isEscalated && !isCompleted && (
               <p className="text-xs text-destructive font-medium mt-1 animate-pulse">
-                Overdue by 15+ minutes. Nurse notified.
+                Atrasado por 15+ minutos. Enfermeiro notificado.
               </p>
             )}
           </div>
@@ -73,13 +73,13 @@ export function TaskCard({ task, onComplete, showStaff = false }: TaskCardProps)
             className="w-full sm:w-auto shrink-0 animate-fade-in"
             variant={isEscalated ? 'destructive' : 'default'}
           >
-            Mark Completed
+            Marcar Concluído
           </Button>
         )}
 
         {isCompleted && (
           <Badge className="bg-green-500 hover:bg-green-600 text-white self-start sm:self-center">
-            Completed
+            Concluído
           </Badge>
         )}
       </CardContent>

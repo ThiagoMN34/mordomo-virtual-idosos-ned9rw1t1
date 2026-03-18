@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!currentUser || currentUser.role !== 'nurse') {
+    if (!currentUser || currentUser.role !== 'admin') {
       navigate('/login')
     }
   }, [currentUser, navigate])
@@ -21,15 +21,14 @@ export default function AdminDashboard() {
   const pendingTasks = tasks.filter((t) => t.status === 'pending')
   const completedTasks = tasks.filter((t) => t.status === 'completed')
 
-  // Group tasks by guest
   const guests = Array.from(new Set(tasks.map((t) => t.guestName))).sort()
 
   return (
     <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Care Center Overview</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Visão Geral da Clínica</h2>
         <p className="text-muted-foreground mt-1">
-          Real-time status of all guest routines and staff activities.
+          Status em tempo real de todas as rotinas e equipe.
         </p>
       </div>
 
@@ -40,7 +39,7 @@ export default function AdminDashboard() {
               <AlertCircle className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-red-600/80">Critical Alerts</p>
+              <p className="text-sm font-medium text-red-600/80">Alertas Críticos</p>
               <h3 className="text-2xl font-bold text-red-700">{escalatedTasks.length}</h3>
             </div>
           </CardContent>
@@ -52,7 +51,7 @@ export default function AdminDashboard() {
               <Clock className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Pending Tasks</p>
+              <p className="text-sm font-medium text-muted-foreground">Tarefas Pendentes</p>
               <h3 className="text-2xl font-bold">{pendingTasks.length}</h3>
             </div>
           </CardContent>
@@ -64,7 +63,7 @@ export default function AdminDashboard() {
               <CheckCircle className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Completed Tasks</p>
+              <p className="text-sm font-medium text-muted-foreground">Tarefas Concluídas</p>
               <h3 className="text-2xl font-bold">{completedTasks.length}</h3>
             </div>
           </CardContent>
@@ -75,7 +74,7 @@ export default function AdminDashboard() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-destructive border-b border-destructive/20 pb-2">
             <Activity className="w-5 h-5" />
-            <h3 className="text-lg font-semibold">Immediate Attention Required</h3>
+            <h3 className="text-lg font-semibold">Atenção Imediata Necessária</h3>
           </div>
           <div className="grid gap-4">
             {escalatedTasks.map((task) => (
@@ -100,7 +99,7 @@ export default function AdminDashboard() {
                   )}
                 </h3>
                 <span className="text-sm font-medium bg-slate-100 px-3 py-1 rounded-full text-slate-600">
-                  Staff: {guestTasks[0]?.staffName}
+                  Responsável: {guestTasks[0]?.staffName}
                 </span>
               </div>
               <div className="grid gap-3">
