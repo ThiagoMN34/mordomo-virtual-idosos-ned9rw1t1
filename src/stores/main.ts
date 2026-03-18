@@ -22,7 +22,6 @@ interface AppState {
   logout: () => void
   completeTask: (id: string) => void
   setTimeMinutes: (m: number) => void
-
   addGuest: (g: Omit<Guest, 'id'>) => void
   deleteGuest: (id: string) => void
   addUser: (u: Omit<User, 'id'>) => void
@@ -30,6 +29,7 @@ interface AppState {
   addActivity: (a: Omit<Activity, 'id'>) => void
   deleteActivity: (id: string) => void
   assignStaffToGuest: (staffId: string, guestId: string | null) => void
+  resetAlerts: () => void
 }
 
 const AppContext = createContext<AppState | null>(null)
@@ -40,18 +40,25 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [guests, setGuests] = useState<Guest[]>(INITIAL_GUESTS)
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES)
   const [tasks, setTasks] = useState<Task[]>([])
-  const [timeMinutes, setTimeMinutes] = useState(420) // Start at 07:00
+  const [timeMinutes, setTimeMinutes] = useState(420)
   const [notified, setNotified] = useState<Set<string>>(new Set())
 
-  // Sync tasks intelligently to maintain standard routine logic
   useEffect(() => {
     setTasks((prev) => generateTasks(users, guests, activities, prev))
   }, [users, guests, activities])
 
   const login = useCallback((user: User) => setCurrentUser(user), [])
   const logout = useCallback(() => setCurrentUser(null), [])
+
   const completeTask = useCallback((id: string) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'completed' } : t)))
+  }, [])
+
+  const resetAlerts = useCallback(() => {
+    setTasks((prev) =>
+      prev.map((t) => (t.status === 'escalated' ? { ...t, status: 'pending' } : t)),
+    )
+    setNotified(new Set())
   }, [])
 
   const addGuest = useCallback(
@@ -134,6 +141,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addActivity,
       deleteActivity,
       assignStaffToGuest,
+      resetAlerts,
     }),
     [
       currentUser,
@@ -152,6 +160,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addActivity,
       deleteActivity,
       assignStaffToGuest,
+      resetAlerts,
     ],
   )
 

@@ -3,6 +3,7 @@ import { LogOut, User as UserIcon } from 'lucide-react'
 import useAppStore from '@/stores/main'
 import { TimeSimulator } from './TimeSimulator'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default function Layout() {
   const { currentUser, logout } = useAppStore()
@@ -15,12 +16,18 @@ export default function Layout() {
   }
 
   const isLoginPage = location.pathname === '/login'
+  const isFixedLayout = location.pathname === '/admin' || location.pathname === '/admin/'
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div
+      className={cn(
+        'bg-slate-50 flex flex-col',
+        isFixedLayout ? 'h-[100dvh] overflow-hidden' : 'min-h-screen',
+      )}
+    >
       {!isLoginPage && currentUser && (
         <>
-          <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
+          <header className="bg-white border-b sticky top-0 z-40 shadow-sm shrink-0">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="bg-primary text-primary-foreground p-2 rounded-lg">
@@ -51,7 +58,7 @@ export default function Layout() {
           </header>
 
           {currentUser.role === 'admin' && (
-            <nav className="bg-slate-100/80 border-b backdrop-blur-md sticky top-16 z-30">
+            <nav className="bg-slate-100/80 border-b backdrop-blur-md sticky top-16 z-30 shrink-0">
               <div className="container mx-auto px-4 flex items-center gap-6 overflow-x-auto py-3 text-sm font-semibold text-slate-600">
                 <NavLink
                   to="/admin"
@@ -90,7 +97,14 @@ export default function Layout() {
         </>
       )}
 
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8 pb-32">
+      <main
+        className={cn(
+          'container mx-auto px-4',
+          isFixedLayout
+            ? 'flex-1 overflow-hidden flex flex-col py-4 pb-[90px]'
+            : 'flex-1 py-6 md:py-8 pb-32',
+        )}
+      >
         <Outlet />
       </main>
 
