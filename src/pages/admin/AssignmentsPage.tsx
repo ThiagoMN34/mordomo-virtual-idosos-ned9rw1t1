@@ -1,20 +1,35 @@
+import { X } from 'lucide-react'
 import useAppStore from '@/stores/main'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 export default function AssignmentsPage() {
-  const { users, guests, assignStaffToGuest } = useAppStore()
+  const { users, guests, assignStaffToGuest, unassignStaffFromGuest } = useAppStore()
   const staff = users.filter((u) => u.role === 'staff')
 
-  const handleDragStart = (e: React.DragEvent, staffId: string) => {
+  const handleDragStartFromList = (e: React.DragEvent, staffId: string) => {
     e.dataTransfer.setData('staffId', staffId)
   }
 
-  const handleDrop = (e: React.DragEvent, guestId: string | null) => {
+  const handleDragStartFromGuest = (e: React.DragEvent, staffId: string, guestId: string) => {
+    e.dataTransfer.setData('staffId', staffId)
+    e.dataTransfer.setData('sourceGuestId', guestId)
+  }
+
+  const handleDropOnGuest = (e: React.DragEvent, guestId: string) => {
     e.preventDefault()
     const staffId = e.dataTransfer.getData('staffId')
     if (staffId) {
       assignStaffToGuest(staffId, guestId)
+    }
+  }
+
+  const handleDropOnList = (e: React.DragEvent) => {
+    e.preventDefault()
+    const staffId = e.dataTransfer.getData('staffId')
+    const sourceGuestId = e.dataTransfer.getData('sourceGuestId')
+    if (staffId && sourceGuestId) {
+      unassignStaffFromGuest(staffId, sourceGuestId)
     }
   }
 
@@ -23,7 +38,8 @@ export default function AssignmentsPage() {
       <div>
         <h2 className="text-3xl font-bold text-slate-900">Atribuições de Equipe</h2>
         <p className="text-muted-foreground mt-1">
-          Arraste os cuidadores para os hóspedes desejados para designar as responsabilidades.
+          Arraste os cuidadores para os hóspedes desejados para designar as responsabilidades. Um
+          único funcionário pode ser atribuído a múltiplos hóspedes.
         </p>
       </div>
 
@@ -32,27 +48,30 @@ export default function AssignmentsPage() {
         <div
           className="w-full md:w-1/3 space-y-3 bg-slate-100 p-4 rounded-xl border border-dashed border-slate-300 min-h-[300px]"
           onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => handleDrop(e, null)}
+          onDrop={handleDropOnList}
         >
-          <h3 className="font-semibold text-slate-700">Disponíveis (Sem Hóspede)</h3>
-          {staff
-            .filter((s) => !s.guestId)
-            .map((s) => (
-              <Card
-                key={s.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, s.id)}
-                className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors shadow-sm"
-              >
-                <CardContent className="p-3 flex items-center justify-between">
-                  <span className="font-medium">{s.name}</span>
-                  <Badge variant="outline">Arraste</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          {staff.filter((s) => !s.guestId).length === 0 && (
+          <div className="mb-2">
+            <h3 className="font-semibold text-slate-700">Equipe de Cuidadores</h3>
+            <p className="text-xs text-muted-foreground">
+              Arraste para os hóspedes ou solte aqui para remover uma atribuição.
+            </p>
+          </div>
+          {staff.map((s) => (
+            <Card
+              key={s.id}
+              draggable
+              onDragStart={(e) => handleDragStartFromList(e, s.id)}
+              className="cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors shadow-sm"
+            >
+              <CardContent className="p-3 flex items-center justify-between">
+                <span className="font-medium">{s.name}</span>
+                <Badge variant="outline">Arraste</Badge>
+              </CardContent>
+            </Card>
+          ))}
+          {staff.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Todos os cuidadores estão atribuídos.
+              Nenhum cuidador cadastrado.
             </p>
           )}
         </div>
@@ -60,12 +79,12 @@ export default function AssignmentsPage() {
         {/* Guests Panel */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {guests.map((g) => {
-            const assignedStaff = staff.filter((s) => s.guestId === g.id)
+            const assignedStaff = staff.filter((s) => s.guestIds?.includes(g.id))
             return (
               <Card
                 key={g.id}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, g.id)}
+                onDrop={(e) => handleDropOnGuest(e, g.id)}
                 className="border-2 border-transparent hover:border-primary/20 transition-colors bg-white shadow-sm"
               >
                 <CardHeader className="pb-2">
@@ -86,10 +105,17 @@ export default function AssignmentsPage() {
                     <div
                       key={s.id}
                       draggable
-                      onDragStart={(e) => handleDragStart(e, s.id)}
-                      className="bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm font-medium flex justify-between cursor-grab active:cursor-grabbing shadow-sm"
+                      onDragStart={(e) => handleDragStartFromGuest(e, s.id, g.id)}
+                      className="bg-primary text-primary-foreground pl-3 pr-1 py-1.5 rounded-md text-sm font-medium flex items-center justify-between cursor-grab active:cursor-grabbing shadow-sm group"
                     >
                       <span>{s.name}</span>
+                      <button
+                        onClick={() => unassignStaffFromGuest(s.id, g.id)}
+                        className="p-1.5 hover:bg-primary-foreground/20 rounded-md transition-colors"
+                        title="Remover cuidador"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   ))}
                 </CardContent>

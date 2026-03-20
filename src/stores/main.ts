@@ -28,7 +28,8 @@ interface AppState {
   deleteUser: (id: string) => void
   addActivity: (a: Omit<Activity, 'id'>) => void
   deleteActivity: (id: string) => void
-  assignStaffToGuest: (staffId: string, guestId: string | null) => void
+  assignStaffToGuest: (staffId: string, guestId: string) => void
+  unassignStaffFromGuest: (staffId: string, guestId: string) => void
   resetAlerts: () => void
 }
 
@@ -65,28 +66,53 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     (g: Omit<Guest, 'id'>) => setGuests((p) => [...p, { ...g, id: Date.now().toString() }]),
     [],
   )
+
   const deleteGuest = useCallback((id: string) => {
     setGuests((p) => p.filter((x) => x.id !== id))
-    setUsers((p) => p.map((u) => (u.guestId === id ? { ...u, guestId: null } : u)))
+    setUsers((p) => p.map((u) => ({ ...u, guestIds: u.guestIds.filter((gid) => gid !== id) })))
   }, [])
 
   const addUser = useCallback(
-    (u: Omit<User, 'id'>) => setUsers((p) => [...p, { ...u, id: Date.now().toString() }]),
+    (u: Omit<User, 'id'>) =>
+      setUsers((p) => {
+        const guestIds = u.guestIds || (u.guestId ? [u.guestId] : [])
+        return [...p, { ...u, id: Date.now().toString(), guestIds }]
+      }),
     [],
   )
+
   const deleteUser = useCallback((id: string) => setUsers((p) => p.filter((x) => x.id !== id)), [])
 
   const addActivity = useCallback(
     (a: Omit<Activity, 'id'>) => setActivities((p) => [...p, { ...a, id: Date.now().toString() }]),
     [],
   )
+
   const deleteActivity = useCallback(
     (id: string) => setActivities((p) => p.filter((x) => x.id !== id)),
     [],
   )
 
-  const assignStaffToGuest = useCallback((staffId: string, guestId: string | null) => {
-    setUsers((p) => p.map((u) => (u.id === staffId ? { ...u, guestId } : u)))
+  const assignStaffToGuest = useCallback((staffId: string, guestId: string) => {
+    setUsers((p) =>
+      p.map((u) => {
+        if (u.id === staffId && !u.guestIds.includes(guestId)) {
+          return { ...u, guestIds: [...u.guestIds, guestId] }
+        }
+        return u
+      }),
+    )
+  }, [])
+
+  const unassignStaffFromGuest = useCallback((staffId: string, guestId: string) => {
+    setUsers((p) =>
+      p.map((u) => {
+        if (u.id === staffId) {
+          return { ...u, guestIds: u.guestIds.filter((gid) => gid !== guestId) }
+        }
+        return u
+      }),
+    )
   }, [])
 
   useEffect(() => {
@@ -141,6 +167,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addActivity,
       deleteActivity,
       assignStaffToGuest,
+      unassignStaffFromGuest,
       resetAlerts,
     }),
     [
@@ -160,6 +187,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addActivity,
       deleteActivity,
       assignStaffToGuest,
+      unassignStaffFromGuest,
       resetAlerts,
     ],
   )

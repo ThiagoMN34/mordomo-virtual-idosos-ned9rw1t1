@@ -5,7 +5,8 @@ export interface User {
   id: string
   name: string
   role: Role
-  guestId: string | null
+  guestId?: string | null // Kept for backward compatibility with potential unmigrated code
+  guestIds: string[]
 }
 
 export interface Guest {
@@ -40,10 +41,10 @@ export const INITIAL_GUESTS: Guest[] = [
 ]
 
 export const INITIAL_USERS: User[] = [
-  { id: 'u1', name: 'Cuidadora Ana', role: 'staff', guestId: 'g1' },
-  { id: 'u2', name: 'Cuidador Pedro', role: 'staff', guestId: 'g2' },
-  { id: 'u3', name: 'Cuidadora Julia', role: 'staff', guestId: null },
-  { id: 'a1', name: 'Enfermeira Chefe', role: 'admin', guestId: null },
+  { id: 'u1', name: 'Cuidadora Ana', role: 'staff', guestId: null, guestIds: ['g1'] },
+  { id: 'u2', name: 'Cuidador Pedro', role: 'staff', guestId: null, guestIds: ['g2'] },
+  { id: 'u3', name: 'Cuidadora Julia', role: 'staff', guestId: null, guestIds: [] },
+  { id: 'a1', name: 'Enfermeira Chefe', role: 'admin', guestId: null, guestIds: [] },
 ]
 
 export const INITIAL_ACTIVITIES: Activity[] = [
@@ -62,25 +63,27 @@ export const generateTasks = (
 ): Task[] => {
   const tasks: Task[] = []
   users
-    .filter((u) => u.role === 'staff' && u.guestId)
+    .filter((u) => u.role === 'staff' && u.guestIds && u.guestIds.length > 0)
     .forEach((staff) => {
-      const guest = guests.find((g) => g.id === staff.guestId)
-      if (!guest) return
+      staff.guestIds.forEach((guestId) => {
+        const guest = guests.find((g) => g.id === guestId)
+        if (!guest) return
 
-      activities.forEach((activity) => {
-        const taskId = `${staff.id}-${guest.id}-${activity.id}`
-        const existing = existingTasks.find((t) => t.id === taskId)
+        activities.forEach((activity) => {
+          const taskId = `${staff.id}-${guest.id}-${activity.id}`
+          const existing = existingTasks.find((t) => t.id === taskId)
 
-        tasks.push({
-          id: taskId,
-          title: activity.title,
-          timeStr: activity.timeStr,
-          timeMins: activity.timeMins,
-          status: existing ? existing.status : 'pending',
-          assignedTo: staff.id,
-          staffName: staff.name,
-          guestId: guest.id,
-          guestName: guest.name,
+          tasks.push({
+            id: taskId,
+            title: activity.title,
+            timeStr: activity.timeStr,
+            timeMins: activity.timeMins,
+            status: existing ? existing.status : 'pending',
+            assignedTo: staff.id,
+            staffName: staff.name,
+            guestId: guest.id,
+            guestName: guest.name,
+          })
         })
       })
     })
