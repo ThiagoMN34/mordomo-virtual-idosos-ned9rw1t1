@@ -18,6 +18,8 @@ interface AppState {
   activities: Activity[]
   tasks: Task[]
   timeMinutes: number
+  weeklyAssignments: Record<string, Record<string, string[]>>
+  nextWeeklyAssignments: Record<string, Record<string, string[]>>
   login: (u: User) => void
   logout: () => void
   completeTask: (id: string) => void
@@ -30,6 +32,9 @@ interface AppState {
   deleteActivity: (id: string) => void
   assignStaffToGuest: (staffId: string, guestId: string) => void
   unassignStaffFromGuest: (staffId: string, guestId: string) => void
+  assignStaffToGuestWeekly: (staffId: string, guestId: string, day: string) => void
+  unassignStaffFromGuestWeekly: (staffId: string, guestId: string, day: string) => void
+  propagateWeek: () => void
   resetAlerts: () => void
 }
 
@@ -43,6 +48,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([])
   const [timeMinutes, setTimeMinutes] = useState(420)
   const [notified, setNotified] = useState<Set<string>>(new Set())
+  const [weeklyAssignments, setWeeklyAssignments] = useState<
+    Record<string, Record<string, string[]>>
+  >({})
+  const [nextWeeklyAssignments, setNextWeeklyAssignments] = useState<
+    Record<string, Record<string, string[]>>
+  >({})
 
   useEffect(() => {
     setTasks((prev) => generateTasks(users, guests, activities, prev))
@@ -115,6 +126,43 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     )
   }, [])
 
+  const assignStaffToGuestWeekly = useCallback((staffId: string, guestId: string, day: string) => {
+    setWeeklyAssignments((prev) => {
+      const guestAssigns = prev[guestId] || {}
+      const dayAssigns = guestAssigns[day] || []
+      if (dayAssigns.includes(staffId)) return prev
+      return {
+        ...prev,
+        [guestId]: {
+          ...guestAssigns,
+          [day]: [...dayAssigns, staffId],
+        },
+      }
+    })
+  }, [])
+
+  const unassignStaffFromGuestWeekly = useCallback(
+    (staffId: string, guestId: string, day: string) => {
+      setWeeklyAssignments((prev) => {
+        const guestAssigns = prev[guestId] || {}
+        const dayAssigns = guestAssigns[day] || []
+        if (!dayAssigns.includes(staffId)) return prev
+        return {
+          ...prev,
+          [guestId]: {
+            ...guestAssigns,
+            [day]: dayAssigns.filter((id) => id !== staffId),
+          },
+        }
+      })
+    },
+    [],
+  )
+
+  const propagateWeek = useCallback(() => {
+    setNextWeeklyAssignments(weeklyAssignments)
+  }, [weeklyAssignments])
+
   useEffect(() => {
     let changed = false
     const updatedTasks = tasks.map((task) => {
@@ -156,6 +204,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       activities,
       tasks,
       timeMinutes,
+      weeklyAssignments,
+      nextWeeklyAssignments,
       login,
       logout,
       completeTask,
@@ -168,6 +218,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       deleteActivity,
       assignStaffToGuest,
       unassignStaffFromGuest,
+      assignStaffToGuestWeekly,
+      unassignStaffFromGuestWeekly,
+      propagateWeek,
       resetAlerts,
     }),
     [
@@ -177,6 +230,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       activities,
       tasks,
       timeMinutes,
+      weeklyAssignments,
+      nextWeeklyAssignments,
       login,
       logout,
       completeTask,
@@ -188,6 +243,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       deleteActivity,
       assignStaffToGuest,
       unassignStaffFromGuest,
+      assignStaffToGuestWeekly,
+      unassignStaffFromGuestWeekly,
+      propagateWeek,
       resetAlerts,
     ],
   )

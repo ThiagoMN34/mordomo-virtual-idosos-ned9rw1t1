@@ -1,40 +1,36 @@
-import { X } from 'lucide-react'
 import useAppStore from '@/stores/main'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { DailyGrid } from '@/components/admin/DailyGrid'
+import { WeeklyGrid } from '@/components/admin/WeeklyGrid'
 
 export default function AssignmentsPage() {
-  const { users, guests, assignStaffToGuest, unassignStaffFromGuest } = useAppStore()
+  const { users, unassignStaffFromGuest, unassignStaffFromGuestWeekly } = useAppStore()
+
   const staff = users.filter((u) => u.role === 'staff')
 
   const handleDragStartFromList = (e: React.DragEvent, staffId: string) => {
     e.dataTransfer.setData('staffId', staffId)
   }
 
-  const handleDragStartFromGuest = (e: React.DragEvent, staffId: string, guestId: string) => {
-    e.dataTransfer.setData('staffId', staffId)
-    e.dataTransfer.setData('sourceGuestId', guestId)
-  }
-
-  const handleDropOnGuest = (e: React.DragEvent, guestId: string) => {
-    e.preventDefault()
-    const staffId = e.dataTransfer.getData('staffId')
-    if (staffId) {
-      assignStaffToGuest(staffId, guestId)
-    }
-  }
-
   const handleDropOnList = (e: React.DragEvent) => {
     e.preventDefault()
     const staffId = e.dataTransfer.getData('staffId')
     const sourceGuestId = e.dataTransfer.getData('sourceGuestId')
+    const sourceGuestIdWeekly = e.dataTransfer.getData('sourceGuestIdWeekly')
+    const sourceDayWeekly = e.dataTransfer.getData('sourceDayWeekly')
+
     if (staffId && sourceGuestId) {
       unassignStaffFromGuest(staffId, sourceGuestId)
+    }
+    if (staffId && sourceGuestIdWeekly && sourceDayWeekly) {
+      unassignStaffFromGuestWeekly(staffId, sourceGuestIdWeekly, sourceDayWeekly)
     }
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
+    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       <div>
         <h2 className="text-3xl font-bold text-slate-900">Atribuições de Equipe</h2>
         <p className="text-muted-foreground mt-1">
@@ -46,7 +42,7 @@ export default function AssignmentsPage() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Available Staff Panel */}
         <div
-          className="w-full md:w-1/3 space-y-3 bg-slate-100 p-4 rounded-xl border border-dashed border-slate-300 min-h-[300px]"
+          className="w-full md:w-64 shrink-0 space-y-3 bg-slate-100 p-4 rounded-xl border border-dashed border-slate-300 min-h-[300px]"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDropOnList}
         >
@@ -76,52 +72,22 @@ export default function AssignmentsPage() {
           )}
         </div>
 
-        {/* Guests Panel */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {guests.map((g) => {
-            const assignedStaff = staff.filter((s) => s.guestIds?.includes(g.id))
-            return (
-              <Card
-                key={g.id}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDropOnGuest(e, g.id)}
-                className="border-2 border-transparent hover:border-primary/20 transition-colors bg-white shadow-sm"
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    {g.name}
-                    <span className="text-xs font-normal text-muted-foreground">
-                      Quarto: {g.room || '-'}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 min-h-[80px]">
-                  {assignedStaff.length === 0 && (
-                    <div className="text-sm text-muted-foreground p-3 bg-slate-50 border border-dashed rounded text-center">
-                      Solte um cuidador aqui
-                    </div>
-                  )}
-                  {assignedStaff.map((s) => (
-                    <div
-                      key={s.id}
-                      draggable
-                      onDragStart={(e) => handleDragStartFromGuest(e, s.id, g.id)}
-                      className="bg-primary text-primary-foreground pl-3 pr-1 py-1.5 rounded-md text-sm font-medium flex items-center justify-between cursor-grab active:cursor-grabbing shadow-sm group"
-                    >
-                      <span>{s.name}</span>
-                      <button
-                        onClick={() => unassignStaffFromGuest(s.id, g.id)}
-                        className="p-1.5 hover:bg-primary-foreground/20 rounded-md transition-colors"
-                        title="Remover cuidador"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )
-          })}
+        {/* Assignments Panel */}
+        <div className="flex-1 min-w-0">
+          <Tabs defaultValue="daily" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="daily">Escala Diária</TabsTrigger>
+              <TabsTrigger value="weekly">Escala Semanal</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="daily" className="m-0 focus-visible:outline-none">
+              <DailyGrid />
+            </TabsContent>
+
+            <TabsContent value="weekly" className="m-0 focus-visible:outline-none">
+              <WeeklyGrid />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
