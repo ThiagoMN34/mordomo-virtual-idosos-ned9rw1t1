@@ -20,12 +20,14 @@ export default function AssignmentsPage() {
     const sourceGuestId = e.dataTransfer.getData('sourceGuestId')
     const sourceGuestIdWeekly = e.dataTransfer.getData('sourceGuestIdWeekly')
     const sourceDayWeekly = e.dataTransfer.getData('sourceDayWeekly')
+    const sourceWeekOffset = e.dataTransfer.getData('sourceWeekOffset')
 
     if (staffId && sourceGuestId) {
       unassignStaffFromGuest(staffId, sourceGuestId)
     }
     if (staffId && sourceGuestIdWeekly && sourceDayWeekly) {
-      unassignStaffFromGuestWeekly(staffId, sourceGuestIdWeekly, sourceDayWeekly)
+      const weekOffset = sourceWeekOffset ? parseInt(sourceWeekOffset, 10) : 0
+      unassignStaffFromGuestWeekly(staffId, sourceGuestIdWeekly, sourceDayWeekly, weekOffset)
     }
   }
 
